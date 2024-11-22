@@ -1,54 +1,63 @@
-import historicoInflacao from '../dados/dados.js';
+import express from 'express';
+import historicoInflacao from './dados/dados.js';
+import { buscarInf, buscarInfPorId, buscarInfPorAno, calcularReajuste } from "./serviços/serviços.js"
 
 
-export const buscarIPCAPorAno = (ano) => {
-    const anoIPCA = parseInt(ano);
-    return historicoInflacao.filter(ipca => ipca.ano === anoIPCA);
-};
+const app = express();
 
-export const buscarIPCAPorid = (id) => {
-    const idIPCA = parseInt(id);
-    return historicoInflacao.find(i => i.id == idIPCA);
-}
+app.get('/historicoIPCA', (req, res) => {
+    res.json(historicoInflacao);
+});
 
+app.get('/historicoIPCA', (req, res) => {
+    const anoInf = req.query.ano;
+    const resultado = anoInf ? buscarInfPorAno(anoInf) : buscarInf();
+    if (resultado.length > 0) {
+        res.json(resultado);
+    } else {
+        res.status(404).send({ "erro": "Nenhum registro encontrado" });
+    }
+});
 
-export const calcularReajuste = (valor, mesInicial, anoInicial, mesFinal, anoFinal, ipcaData) => {
-    const gerarChavesPeriodo = (mesInicial, anoInicial, mesFinal, anoFinal) => {
-        const periodo = [];
-        let ano = parseInt(anoInicial);
-        let mes = parseInt(mesInicial);
+app.get('/historicoIPCA/calculo', (req, res) => {
+    const valor = parseFloat(req.query.valor);
+    const mesInicial = parseInt(req.query.mesInicial);
+    const anoInicial = parseInt(req.query.anoInicial);
+    const mesFinal = parseInt(req.query.mesFinal);
+    const anoFinal = parseInt(req.query.anoFinal);
 
-        while (ano < parseInt(anoFinal) || (ano === parseInt(anoFinal) && mes <= parseInt(mesFinal))) {
-            periodo.push(`${ano}-${String(mes).padStart(2, '0')}`);
-            mes++;
-            if (mes > 12) {
-                mes = 1;
-                ano++;
-            }
-        }
-        return periodo;
-    };
-
-
-    const periodoChaves = gerarChavesPeriodo(mesInicial, anoInicial, mesFinal, anoFinal);
-
-
-    let resultado = parseFloat(valor);
-    const ipcaAplicados = [];
-
-    for (const chave of periodoChaves) {
-        const ipca = ipcaData[chave];
-        if (ipca === undefined) {
-            throw new Error(`Dados de IPCA não encontrados para o período: ${chave}`);
-        }
-        resultado *= 1 + ipca / 100;
-        ipcaAplicados.push({ chave, ipca });
+    if (isNaN(valor) || isNaN(mesInicial) || isNaN(anoInicial) || isNaN(mesFinal) || isNaN(anoFinal)) {
+        return res.status(400).json({ error: "Todos os parâmetros (valor, mesInicial, anoInicial, mesFinal, anoFinal) são obrigatórios e devem ser válidos." });
     }
 
-    return {
-        valorInicial: parseFloat(valor),
-        periodo: { mesInicial, anoInicial, mesFinal, anoFinal },
-        ipcaAplicados,
-        valorReajustado: resultado.toFixed(2),
-    };
-};
+    if (anoInicial > anoFinal || (anoInicial === anoFinal && mesInicial > mesFinal)) {
+        return res.status(400).json({ error: "O mês/ano inicial deve ser menor ou igual ao mês/ano final." });
+    }
+
+    try {
+        const resultado = calcularReajuste(valor, mesInicial, anoInicial, mesFinal, anoFinal);
+        res.json({ valorReajustado: resultado.toFixed(2) });
+    } catch (error) {
+        res.status(500).json({ "erro": "Erro ao calcular o reajuste." });
+    }
+});
+
+app.get('/historicoIPCA/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+        return res.status(400).send({ "erro": "Requisição inválida, o ID deve ser numérico" });
+    }
+
+    const inf = buscarInfPorId(id);
+
+    if (inf) {
+        res.json(inf);
+    } else {
+        res.status(404).send({ "erro": "ID não encontrado" });
+    }
+});
+
+app.listen(8080, () => {
+    console.log('Servidor iniciado na porta 8080');
+});

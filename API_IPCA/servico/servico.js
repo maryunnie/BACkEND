@@ -1,54 +1,35 @@
-import historicoInflacao from '../dados/dados.js';
+import colecaoInf from "../dados/dados.js";
 
-
-export const buscarIPCAPorAno = (ano) => {
-    const anoIPCA = parseInt(ano);
-    return historicoInflacao.filter(ipca => ipca.ano === anoIPCA);
-};
-
-export const buscarIPCAPorid = (id) => {
-    const idIPCA = parseInt(id);
-    return historicoInflacao.find(i => i.id == idIPCA);
+export const buscarInf = () =>{
+    return colecaoInf;
 }
 
+export const buscarInfPorAno = (anoInf) => {
+    return colecaoInf.filter(inf => inf.ano == anoInf)
+};
 
-export const calcularReajuste = (valor, mesInicial, anoInicial, mesFinal, anoFinal, ipcaData) => {
-    const gerarChavesPeriodo = (mesInicial, anoInicial, mesFinal, anoFinal) => {
-        const periodo = [];
-        let ano = parseInt(anoInicial);
-        let mes = parseInt(mesInicial);
+export const buscarInfPorId = (id) =>{
+    const idInf = parseInt(id);
+    return colecaoInf.find(inf => inf.id === idInf);
+}
 
-        while (ano < parseInt(anoFinal) || (ano === parseInt(anoFinal) && mes <= parseInt(mesFinal))) {
-            periodo.push(`${ano}-${String(mes).padStart(2, '0')}`);
-            mes++;
-            if (mes > 12) {
-                mes = 1;
-                ano++;
-            }
-        }
-        return periodo;
-    };
+export const calcularReajuste = (valor, mesInicial, anoInicial, mesFinal, anoFinal) => {
+    const ipcaFiltrado = colecaoInf.filter((item) => {
+        const anoMes = item.ano * 12 + item.mes;
+        const anoMesInicial = anoInicial * 12 + mesInicial;
+        const anoMesFinal = anoFinal * 12 + mesFinal;
+        return anoMes >= anoMesInicial && anoMes <= anoMesFinal;
+    });
 
-
-    const periodoChaves = gerarChavesPeriodo(mesInicial, anoInicial, mesFinal, anoFinal);
-
-
-    let resultado = parseFloat(valor);
-    const ipcaAplicados = [];
-
-    for (const chave of periodoChaves) {
-        const ipca = ipcaData[chave];
-        if (ipca === undefined) {
-            throw new Error(`Dados de IPCA não encontrados para o período: ${chave}`);
-        }
-        resultado *= 1 + ipca / 100;
-        ipcaAplicados.push({ chave, ipca });
+    if (ipcaFiltrado.length === 0) {
+        throw new Error("Nenhum índice IPCA encontrado no período informado.");
     }
 
-    return {
-        valorInicial: parseFloat(valor),
-        periodo: { mesInicial, anoInicial, mesFinal, anoFinal },
-        ipcaAplicados,
-        valorReajustado: resultado.toFixed(2),
-    };
-};
+    let resultado = valor;
+    ipcaFiltrado.forEach((item) => {
+        resultado *= 1 + item.ipca / 100;
+        console.log(resultado)
+    });
+
+    return resultado;
+}
