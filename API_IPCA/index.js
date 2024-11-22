@@ -1,6 +1,6 @@
-import express from 'express';
+import express from "express";
 import historicoInflacao from './dados/dados.js';
-import { buscarInf, buscarInfPorId, buscarInfPorAno, calcularReajuste } from "./servico/servico.js"
+import { buscarInf, buscarInfPorId, buscarInfPorAno, calcularReajuste } from "./servico/servico.js";
 
 
 const app = express();
