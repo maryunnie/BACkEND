@@ -1,6 +1,6 @@
 import express from "express";
 import historicoInflacao from './dados/dados.js';
-import { buscarInf, buscarInfPorId, buscarInfPorAno, calcularReajuste } from "./servico/servico.js";
+import {procurarInf, procurarInfPorId, procurarInfPorAno, calcularReajuste } from "./servico/servico.js";
 
 
 const app = express();
@@ -11,7 +11,7 @@ app.get('/historicoIPCA', (req, res) => {
 
 app.get('/historicoIPCA', (req, res) => {
     const anoInf = req.query.ano;
-    const resultado = anoInf ? buscarInfPorAno(anoInf) : buscarInf();
+    const resultado = anoInf ? procurarInfPorAno(anoInf) : procurarInf();
     if (resultado.length > 0) {
         res.json(resultado);
     } else {
@@ -49,7 +49,7 @@ app.get('/historicoIPCA/:id', (req, res) => {
         return res.status(400).send({ "erro": "Requisição inválida, o ID deve ser numérico" });
     }
 
-    const inf = buscarInfPorId(id);
+    const inf = procurarInfPorId(id);
 
     if (inf) {
         res.json(inf);

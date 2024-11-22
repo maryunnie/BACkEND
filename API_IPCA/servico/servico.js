@@ -1,14 +1,14 @@
 import colecaoInf from "../dados/dados.js";
 
-export const buscarInf = () =>{
+export const procurarInf = () =>{
     return colecaoInf;
 }
 
-export const buscarInfPorAno = (anoInf) => {
+export const procurarInfPorAno = (anoInf) => {
     return colecaoInf.filter(inf => inf.ano == anoInf)
 };
 
-export const buscarInfPorId = (id) =>{
+export const procurarInfPorId = (id) =>{
     const idInf = parseInt(id);
     return colecaoInf.find(inf => inf.id === idInf);
 }
