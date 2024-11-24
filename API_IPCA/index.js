@@ -1,24 +1,8 @@
 import express from "express";
-import historicoInflacao from './dados/dados.js';
 import {procurarInf, procurarInfPorId, procurarInfPorAno, calcularReajuste } from "./servico/servico.js";
 
 
 const app = express();
-
-app.get('/historicoIPCA', (req, res) => {
-    res.json(historicoInflacao);
-});
-
-app.get('/historicoIPCA', (req, res) => {
-    const anoInf = req.query.ano;
-    const resultado = anoInf ? procurarInfPorAno(anoInf) : procurarInf();
-    if (resultado.length > 0) {
-        res.json(resultado);
-    } else {
-        res.status(404).send({ "erro": "Nenhum registro encontrado" });
-    }
-});
-
 app.get('/historicoIPCA/calculo', (req, res) => {
     const valor = parseFloat(req.query.valor);
     const mesInicial = parseInt(req.query.mesInicial);
@@ -42,22 +26,30 @@ app.get('/historicoIPCA/calculo', (req, res) => {
     }
 });
 
-app.get('/historicoIPCA/:id', (req, res) => {
-    const id = parseInt(req.params.id);
+app.listen(8080, () => {
+    console.log('Servidor iniciado na porta 8080')
+});
 
-    if (isNaN(id)) {
-        return res.status(400).send({ "erro": "Requisição inválida, o ID deve ser numérico" });
-    }
 
-    const inf = procurarInfPorId(id);
 
-    if (inf) {
-        res.json(inf);
+app.get('/historicoIPCA', (req, res) => {
+    const anoInf = req.query.ano;
+    const resultado = anoInf ? procurarInfPorAno(anoInf) : procurarInf();
+    if (resultado.length > 0) {
+        res.json(resultado);
     } else {
-        res.status(404).send({ "erro": "ID não encontrado" });
+        res.status(404).send({ "erro": "Nenhum registro encontrado" });
     }
 });
 
-app.listen(8080, () => {
-    console.log('Servidor iniciado na porta 8080');
+app.get('/historicoiPCA/:id', (req, res) => {
+    const i = procurarInfPorId(req.params.id);
+
+    if (i) {
+        res.json(i);
+    } else if (isNaN(parseInt(req.params.id))) {
+        res.status(400).send({ "erro": 'Requisição inválida' })
+    } else {
+        res.status(404).send({ "erro": 'UF não encontrada' })
+    }    
 });

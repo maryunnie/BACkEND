@@ -1,20 +1,20 @@
-import colecaoInf from "../dados/dados.js";
+import historicoInflacao from '../dados/dados.js';
 
 export const procurarInf = () =>{
-    return colecaoInf;
+    return historicoInflacao;
 }
 
 export const procurarInfPorAno = (anoInf) => {
-    return colecaoInf.filter(inf => inf.ano == anoInf)
+    return historicoInflacao.filter(inf => inf.ano == anoInf);
 };
 
-export const procurarInfPorId = (id) =>{
-    const idInf = parseInt(id);
-    return colecaoInf.find(inf => inf.id === idInf);
+export const procurarInfPorId = (id) => {
+    const idIPCA = parseInt(id);
+    return historicoInflacao.find(i => i.id == idIPCA);
 }
 
 export const calcularReajuste = (valor, mesInicial, anoInicial, mesFinal, anoFinal) => {
-    const ipcaFiltrado = colecaoInf.filter((item) => {
+    const ipcaFiltrado = historicoInflacao.filter((item) => {
         const anoMes = item.ano * 12 + item.mes;
         const anoMesInicial = anoInicial * 12 + mesInicial;
         const anoMesFinal = anoFinal * 12 + mesFinal;
